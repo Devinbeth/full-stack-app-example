@@ -40,11 +40,15 @@ passport.use(new Auth0Strategy({
 }));
 
 passport.serializeUser((id, done) => done(null, id));
-passport.deserializeUser((profile, done) => done(null, profile));
+passport.deserializeUser((id, done) => {
+    app.get('db').find_session_user().then(user => {
+        done(null, user[0]);
+    })
+});
 
 app.get('/auth', passport.authenticate('auth0'));
 app.get('/auth/callback', passport.authenticate('auth0', {
-    successRedirect: 'http://localhost:3000',
+    successRedirect: 'http://localhost:3000/#/private',
     failueRedirect: 'http://localhost:3000'
 }));
 
