@@ -10,6 +10,8 @@ const app = express();
 
 massive(CONNECTION_STRING).then(db => app.set('db', db));
 
+app.use(express.static(__dirname + './../build'));
+
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
@@ -31,7 +33,7 @@ passport.use(new Auth0Strategy({
         if (!users[0]) {
             db.create_user([profile.displayName, profile.picture, profile.id]).then(user => {
                 done(null, user[0].id);
-            })
+            });
         }
         else {
             done(null, users[0].id);
@@ -41,15 +43,27 @@ passport.use(new Auth0Strategy({
 
 passport.serializeUser((id, done) => done(null, id));
 passport.deserializeUser((id, done) => {
-    app.get('db').find_session_user().then(user => {
+    app.get('db').find_session_user([id]).then(user => {
         done(null, user[0]);
     })
 });
 
 app.get('/auth', passport.authenticate('auth0'));
 app.get('/auth/callback', passport.authenticate('auth0', {
-    successRedirect: 'http://localhost:3000/#/private',
-    failueRedirect: 'http://localhost:3000'
+    successRedirect: 'http://localhost:3535/#/private',
+    failueRedirect: 'http://localhost:3535'
 }));
+app.get('/auth/me', (req, res) => {
+    if (req.user) {
+        res.status(200).send(req.user);
+    }
+    else {
+        res.status(401).send('Nice try suckaaaaaa!!!!!!');
+    }
+});
+app.get('/auth/logout', (req, res) => {
+    req.logOut();
+    res.redirect('http://localhost:3535/')
+})
 
 app.listen(SERVER_PORT, () => console.log(`Server is listening on port: ${SERVER_PORT}`));

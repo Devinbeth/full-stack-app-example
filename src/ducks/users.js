@@ -1,7 +1,25 @@
+import axios from 'axios';
+
 const initialState = {
     user: {}
+};
+
+const GET_USER = 'GET_USER';
+
+export function getUser() {
+    let userData = axios.get('/auth/me').then(res => res.data);
+    return {
+        type: GET_USER,
+        payload: userData
+    };
 }
 
 export default function reducer(state = initialState, action) {
-    return state;
+    switch (action.type) {
+        case GET_USER + '_FULFILLED':
+            console.log(action.type);
+            return Object.assign({}, state, {user: action.payload});
+        default:
+            return state;
+    }
 }
